@@ -11,8 +11,9 @@ from mythril.analysis.swc_data import UNPROTECTED_ETHER_WITHDRAWAL
 from mythril.laser.ethereum.state.global_state import GlobalState
 from mythril.analysis import solver
 from mythril.exceptions import UnsatError
-from mythril.laser.smt import UGT,UGE,ULE
+from mythril.laser.smt import UGT
 from mythril.laser.smt import BitVec, symbol_factory
+from mythril.laser.smt.bool import And
 
 log = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ class EtherPhishing(DetectionModule):
         zero = symbol_factory.BitVecVal(0, 256)
         sender = state.environment.sender
         constraints += [
-            state.world_state.balances[sender] == zero,
+            And(state.world_state.balances[sender] == zero, UGT(state.world_state.starting_balances[sender], zero))
         ]
 
         try:
@@ -90,6 +91,7 @@ class EtherPhishing(DetectionModule):
                 detector=self,
                 constraints=constraints,
             )
+            self.issues
 
             return [potential_issue]
         except UnsatError:
